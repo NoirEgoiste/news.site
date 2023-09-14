@@ -2,11 +2,34 @@ version: '3.9'
 
 services:
   web:
-    build: ./app
-    command: python manage.py runserver 0.0.0.0:8000
+    container_name: news_website
+    build: .
+    command: >
+      sh -c "python manage.py makemigrations --noinput && 
+      python manage.py migrate
+      && python manage.py runserver 0.0.0.0:8000"
     volumes:
-      - ./app/:/usr/src/app/
+      - ./:/news_website
     ports:
-      - 8000:8000
+      - "8000:8000"
     env_file:
       - ./.env.dev
+    depends_on:
+      - db
+
+  db:
+    image: postgres
+    container_name: news_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - news_db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    env_file:
+      - ./.env.dev
+
+volumes:
+  news_db:
