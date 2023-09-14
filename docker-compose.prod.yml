@@ -2,12 +2,23 @@ version: '3.9'
 
 
 services:
-  web:
-    container_name: news_website_prod
-    build: .
-    command: gunicorn news_website.wsgi:application --bind 0.0.0.0:8000
+  nginx:
+    build: ./nginx
+    volumes:
+      - static_volume:home/app/web/staticfiles
     ports:
-      - "8000:8000"
+      - "1337:80"
+    depends_on:
+      - web
+  web:
+    build:
+      context: ./
+      dockerfile: dockerfile.prod
+    command: gunicorn news_website.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - static_volume:home/app/web/staticfiles
+    expose:
+      - 8000
     env_file:
       ./.env.prod
     depends_on:
@@ -17,9 +28,10 @@ services:
     image: postgres
     container_name: news_db_prod
     volumes:
-      - news_db:/var/lib/postgresql/data
+      - prod_news_db:/var/lib/postgresql/data
     env_file:
       - ./.env.prod.db
 
 volumes:
   prod_news_db:
+  static_volume:
